@@ -36,11 +36,20 @@ function sourceLabel(note: ScoredNote) {
   return note.source === "public-browser" ? "公开页面" : note.source === "search-fallback" ? "搜索兜底" : "演示";
 }
 
+function apiErrorMessage(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  if (message.includes("Failed to fetch") || message.includes("NetworkError") || message.includes("Load failed")) {
+    return "本机采集服务未连接。请在当前电脑的项目目录运行 npm run api，再回到页面点击登录或扫描。";
+  }
+  return `操作失败：${message}`;
+}
+
 export function App() {
   const [run, setRun] = useState<ScanRun>(emptyRun);
   const [selectedKeyword, setSelectedKeyword] = useState<string>("all");
   const [query, setQuery] = useState("");
   const [loadError, setLoadError] = useState("");
+  const [actionError, setActionError] = useState("");
   const [keywordDraft, setKeywordDraft] = useState("");
   const [isScanning, setIsScanning] = useState(false);
   const [isOpeningLogin, setIsOpeningLogin] = useState(false);
@@ -72,7 +81,7 @@ export function App() {
   async function runScanFromWeb() {
     setIsScanning(true);
     setActionMessage("");
-    setLoadError("");
+    setActionError("");
     try {
       const response = await fetch(`${API_BASE}/api/scan`, {
         method: "POST",
@@ -85,7 +94,7 @@ export function App() {
       setSelectedKeyword((payload as ScanRun).keywords[0] ?? "all");
       setActionMessage("扫描完成，已刷新看板和 Markdown 日报。");
     } catch (error) {
-      setLoadError(error instanceof Error ? error.message : String(error));
+      setActionError(apiErrorMessage(error));
     } finally {
       setIsScanning(false);
     }
@@ -94,14 +103,14 @@ export function App() {
   async function openLoginWindow() {
     setIsOpeningLogin(true);
     setActionMessage("");
-    setLoadError("");
+    setActionError("");
     try {
       const response = await fetch(`${API_BASE}/api/login/open`, { method: "POST" });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error ?? `HTTP ${response.status}`);
       setActionMessage(payload.message ?? "登录窗口已打开。登录完成后点击立即扫描。");
     } catch (error) {
-      setLoadError(error instanceof Error ? error.message : String(error));
+      setActionError(apiErrorMessage(error));
     } finally {
       setIsOpeningLogin(false);
     }
@@ -221,6 +230,7 @@ export function App() {
         </div>
 
         {loadError && <div className="notice">看板数据读取失败：{loadError}</div>}
+        {actionError && <div className="notice">{actionError}</div>}
         {actionMessage && <div className="success-notice">{actionMessage}</div>}
         {run.errors.length > 0 && <div className="notice">{run.errors.join("；")}</div>}
 
