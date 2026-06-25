@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.superpowers/
+.xhs-login-profile/
+data/
+reports/
+playwright-report/
+test-results/
+tsconfig.tsbuildinfo
+.DS_Store

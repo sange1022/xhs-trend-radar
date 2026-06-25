@@ -1,0 +1,13 @@
+keywords:
+  - 中古风装修
+scan:
+  limitPerKeyword: 20
+  mode: public
+  enableLoginCollector: true
+  enableBrowserCollector: true
+  enableSearchFallback: true
+  schedule:
+    enabled: false
+    time: '09:00'
+  preciseMode: true
+  detailLimitPerKeyword: 20
